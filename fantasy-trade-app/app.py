@@ -28,7 +28,7 @@ pesos_status = {"Titular": 1.0, "Reserva": 0.6}
 st.set_page_config(page_title="Calculadora de Trade Dynasty", layout="wide")
 st.title("🤝 Calculadora de Trade - Fantasy Dynasty")
 
-st.caption("Selecione jogadores ou digite nomes manualmente, incluindo picks. Avaliaremos impacto relativo com base em score ponderado.")
+st.caption("Selecione jogadores ou picks usando os campos abaixo. Avaliaremos o impacto relativo com base em score ponderado.")
 
 col1, col2 = st.columns(2)
 
@@ -36,19 +36,29 @@ with col1:
     st.subheader("Lado A")
     jogadores_a = []
     for i in range(5):
-        nome = st.text_input(f"Jogador ou Pick {i+1} (A)", key=f"nome_a_{i}")
-        if nome:
+        nome_display = st.selectbox(
+            f"Jogador ou Pick {i+1} (A)",
+            options=[""] + df["player_display"].tolist(),
+            key=f"nome_a_{i}",
+        )
+        if nome_display:
             status = st.radio("Status", ["Titular", "Reserva"], key=f"status_a_{i}", horizontal=True)
-            jogadores_a.append((nome.strip().lower(), status))
+            nome = df[df["player_display"] == nome_display]["player"].values[0].lower()
+            jogadores_a.append((nome, status))
 
 with col2:
     st.subheader("Lado B")
     jogadores_b = []
     for i in range(5):
-        nome = st.text_input(f"Jogador ou Pick {i+1} (B)", key=f"nome_b_{i}")
-        if nome:
+        nome_display = st.selectbox(
+            f"Jogador ou Pick {i+1} (B)",
+            options=[""] + df["player_display"].tolist(),
+            key=f"nome_b_{i}",
+        )
+        if nome_display:
             status = st.radio("Status", ["Titular", "Reserva"], key=f"status_b_{i}", horizontal=True)
-            jogadores_b.append((nome.strip().lower(), status))
+            nome = df[df["player_display"] == nome_display]["player"].values[0].lower()
+            jogadores_b.append((nome, status))
 
 st.divider()
 
@@ -94,7 +104,7 @@ if valor_a and valor_b:
     st.subheader("📊 Avaliação da Troca")
     st.write(f"**Lado {maior} leva vantagem de {delta} pontos ({pct}%) sobre o lado {menor}.**")
 
-    candidatos = df[~df["player"].isin([x[0] for x in jogadores_a + jogadores_b])]
+    candidatos = df[~df["player"].isin([x[0] for x in jogadores_a + jogadores_b])].copy()
     candidatos["diff"] = abs(candidatos["value_score"] - delta)
     sugestoes = candidatos.sort_values("diff").head(5)
     st.markdown("**Jogadores ou picks com valor próximo do gap:**")
